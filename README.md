@@ -26,19 +26,18 @@ Yolo data file路徑
 
 https://github.com/HZM111368024/YoloV4_Script/blob/a31da36765b4e4d7e77dd66830182dc4ff91ac9b/image_txt.py#L3
 https://github.com/HZM111368024/YoloV4_Script/blob/a31da36765b4e4d7e77dd66830182dc4ff91ac9b/image_txt.py#L10
-
-
-
 ### 使用方式
 ```
 python image_txt.py 
 ```
+
 ## 3. modify_class.py
 如果使用他人的dataset，可以使用這個script將要訓練的image的資訊txt中的class改變成自己想要的class number
 ### 路徑修改 
 - 圖片資訊txt路徑 : 
-https://github.com/HZM111368024/YoloV4_Script/blob/a31da36765b4e4d7e77dd66830182dc4ff91ac9b/image_txt.py#L3
-
+https://github.com/HZM111368024/YoloV4_Script/blob/37d9c9e5eeee4f7f0718652e366c0122f2a5e1cf/modify_class.py#L3
+- 想更改的class : 
+https://github.com/HZM111368024/YoloV4_Script/blob/37d9c9e5eeee4f7f0718652e366c0122f2a5e1cf/modify_class.py#L14
 ### 使用方式
 ```
 python modify_class.py
