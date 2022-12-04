@@ -190,7 +190,17 @@ def calculating(detections,person_number,time,imgName):
         # 人數 person_number
 
 def output_json_file():
-    file = targetName + '.json'
+    jsonfolderpath = "./Yolov4_Output_Json"
+    # 檢查目錄是否存在 
+    if not os.path.isdir(jsonfolderpath):
+        # 如果json資料夾不存在，建立一個
+        print("-------------目錄不存在-------------")
+        os.makedirs('./Yolov4_Output_Json')
+        print('-----建立資料夾成功-----')
+    # else:
+    #     print("-------------目錄存在-------------")
+
+    file = jsonfolderpath+"/"+targetName + '.json'
     with open(file, 'w') as obj:
         # 輸出成JSON並格式化
         json.dump(caculates, obj, indent=4, separators=(',', ':'))
