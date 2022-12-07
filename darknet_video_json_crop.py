@@ -10,7 +10,7 @@ from threading import Thread, enumerate
 from queue import Queue
 import math
 import sys
-
+import ffmpeg
 
 def parser():
     parser = argparse.ArgumentParser(description="YOLO Object Detection")
@@ -153,7 +153,6 @@ def inference(darknet_image_queue, detections_queue, fps_queue):
 def drawing(frame_queue, detections_queue, fps_queue):
     random.seed(3)  # deterministic bbox colors
     # video = set_saved_video(cap, args.out_filename, (width, height))
-    person = set(['Pistol'])
     t = 1;
     # 6FPS
 
@@ -177,20 +176,24 @@ def drawing(frame_queue, detections_queue, fps_queue):
                     crop_x = crop_x_queue.get()
                     crop_y = crop_y_queue.get()
                     for label, confidence, bbox in detections:
-                        bbox_adjusted = convert2original(frame, bbox, crop_x, crop_y)
-                        if bbox_adjusted[2] < crop_width / 2 and bbox_adjusted[3] < crop_height / 2:
-                            all_confidence.append(float(confidence))
-                            all_boxes.append(bbox_adjusted)
-                            all_label.append(label)
+                        if label == "Pistol":
+                            bbox_adjusted = convert2original(frame, bbox, crop_x, crop_y)
+                            if bbox_adjusted[2] < crop_width / 2 and bbox_adjusted[3] < crop_height / 2:
+                                all_confidence.append(float(confidence))
+                                all_boxes.append(bbox_adjusted)
+                                all_label.append(label)
             idxs = cv2.dnn.NMSBoxes(all_boxes, all_confidence, 0.5, 0.2)
             if len(idxs) > 0:
                 for i in idxs.flatten():
                     (x, y) = (all_boxes[i][0], all_boxes[i][1])
                     (w, h) = (all_boxes[i][2], all_boxes[i][3])
-                    print((all_label[i], all_confidence[i], (x, y, w, h)))
                     detections_adjusted.append((all_label[i], all_confidence[i], (x, y, w, h)))
             image = darknet.draw_boxes(detections_adjusted, frame, class_colors)
-            if timeCount % 5 == 0:
+            probe = ffmpeg.probe(args.input)
+            video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
+            video_trueFPS = int(video_stream['r_frame_rate'].split('/')[0]) / int(video_stream['r_frame_rate'].split('/')[1])
+            print((round(video_trueFPS/6)))
+            if timeCount % (round(video_trueFPS/6)) == 0:
                 imgName = targetName + '#t=' + str(time + timestamp_fps[storetime % 6])
                 # 儲存圖片
                 storageImg(targetName, imgName, image)
