@@ -9,7 +9,7 @@ import argparse
 from threading import Thread, enumerate
 from queue import Queue
 import math
-
+import sys
 
 def parser():
     parser = argparse.ArgumentParser(description="YOLO Object Detection")
@@ -295,3 +295,5 @@ if __name__ == '__main__':
     Thread(target=video_capture, args=(frame_queue, darknet_image_queue)).start()
     Thread(target=inference, args=(darknet_image_queue, detections_queue, fps_queue)).start()
     Thread(target=drawing, args=(frame_queue, detections_queue, fps_queue)).start()
+
+    sys.exit()
