@@ -11,6 +11,7 @@ from queue import Queue
 import math
 import sys
 
+
 def parser():
     parser = argparse.ArgumentParser(description="YOLO Object Detection")
     parser.add_argument("--input", type=str, default=0,
@@ -138,12 +139,13 @@ def inference(darknet_image_queue, detections_queue, fps_queue):
         for i in range(0, 6, 1):
             for j in range(0, 6, 1):
                 darknet_image = darknet_image_queue.get()
-                detections = darknet.detect_image(network, class_names, darknet_image, thresh=args.thresh, hier_thresh=.5, nms=.1)
+                detections = darknet.detect_image(network, class_names, darknet_image, thresh=args.thresh,
+                                                  hier_thresh=.5, nms=.1)
                 detections_queue.put(detections)
                 darknet.print_detections(detections, args.ext_output)
                 darknet.free_image(darknet_image)
         fps = int(1 / (time.time() - prev_time))
-        print("Fps"+str(fps))
+        print("Fps" + str(fps))
         fps_queue.put(fps)
     cap.release()
 
@@ -164,6 +166,9 @@ def drawing(frame_queue, detections_queue, fps_queue):
     while cap.isOpened():
         frame = frame_queue.get()
         fps = fps_queue.get()
+        all_confidence = []
+        all_boxes = []
+        all_label = []
         detections_adjusted = []
         if frame is not None:
             for i in range(0, 6, 1):
@@ -173,11 +178,18 @@ def drawing(frame_queue, detections_queue, fps_queue):
                     crop_y = crop_y_queue.get()
                     for label, confidence, bbox in detections:
                         bbox_adjusted = convert2original(frame, bbox, crop_x, crop_y)
-                        if bbox_adjusted[2] < crop_width/2 and bbox_adjusted[3] < crop_height/2:
-                            print(bbox_adjusted)
-                            detections_adjusted.append((str(label), confidence, bbox_adjusted))
+                        if bbox_adjusted[2] < crop_width / 2 and bbox_adjusted[3] < crop_height / 2:
+                            all_confidence.append(float(confidence))
+                            all_boxes.append(bbox_adjusted)
+                            all_label.append(label)
+            idxs = cv2.dnn.NMSBoxes(all_boxes, all_confidence, 0.5, 0.2)
+            if len(idxs) > 0:
+                for i in idxs.flatten():
+                    (x, y) = (all_boxes[i][0], all_boxes[i][1])
+                    (w, h) = (all_boxes[i][2], all_boxes[i][3])
+                    print((all_label[i], all_confidence[i], (x, y, w, h)))
+                    detections_adjusted.append((all_label[i], all_confidence[i], (x, y, w, h)))
             image = darknet.draw_boxes(detections_adjusted, frame, class_colors)
-            print("time%d" % time)
             if timeCount % 5 == 0:
                 imgName = targetName + '#t=' + str(time + timestamp_fps[storetime % 6])
                 # 儲存圖片
