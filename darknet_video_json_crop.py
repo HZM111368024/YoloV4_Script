@@ -74,7 +74,7 @@ def convert2relative(bbox):
     return x / _width, y / _height, w / _width, h / _height
 
 
-def convert2original(image, bbox, begin_x, begin_y):
+def crop_convert2original(image, bbox, begin_x, begin_y):
     x, y, w, h = convert2relative(bbox)
 
     image_h, image_w, __ = image.shape
@@ -88,7 +88,19 @@ def convert2original(image, bbox, begin_x, begin_y):
 
     return bbox_converted
 
+def full_convert2original(image, bbox, begin_x, begin_y):
+    x, y, w, h = convert2relative(bbox)
 
+    image_h, image_w, __ = image.shape
+
+    orig_x = int(x * math.floor(width))
+    orig_y = int(y * math.floor(height))
+    orig_width = int(w * math.floor(width))
+    orig_height = int(h * math.floor(height))
+
+    bbox_converted = (begin_x + orig_x, begin_y + orig_y, orig_width, orig_height)
+
+    return bbox_converted
 def bbox2points(bbox):
     """
     From bounding box yolo format
@@ -214,8 +226,8 @@ def drawing(frame_queue, detections_queue, fps_queue):
                     crop_y = crop_y_queue.get()
                     for label, confidence, bbox in detections:
                         if label == "Pistol":
-                            bbox_adjusted = convert2original(frame, bbox, crop_x, crop_y)
-                            bbox_nms = bbox2points(convert2original(frame, bbox, crop_x, crop_y))
+                            bbox_adjusted = crop_convert2original(frame, bbox, crop_x, crop_y)
+                            bbox_nms = bbox2points(crop_convert2original(frame, bbox, crop_x, crop_y))
                             if bbox_adjusted[2] < crop_width / 2 and bbox_adjusted[3] < crop_height / 2:
                                 all_boxes_nms.append(bbox_nms)
                                 all_confidence.append(float(confidence))
@@ -228,8 +240,8 @@ def drawing(frame_queue, detections_queue, fps_queue):
             crop_y = crop_y_queue.get()
             for label, confidence, bbox in detections:
                 if label == "Pistol":
-                    bbox_adjusted = convert2original(frame, bbox, crop_x, crop_y)
-                    bbox_nms = bbox2points(convert2original(frame, bbox, crop_x, crop_y))
+                    bbox_adjusted = full_convert2original(frame, bbox, crop_x, crop_y)
+                    bbox_nms = bbox2points(full_convert2original(frame, bbox, crop_x, crop_y))
                     if bbox_adjusted[2] < crop_width / 2 and bbox_adjusted[3] < crop_height / 2:
                         all_boxes_nms.append(bbox_nms)
                         all_confidence.append(float(confidence))
